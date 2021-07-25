@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.PrintWriter;
 
-@Configuration
+//@Configuration
 public class SecurityConfig2 extends WebSecurityConfigurerAdapter {
 
     @Bean

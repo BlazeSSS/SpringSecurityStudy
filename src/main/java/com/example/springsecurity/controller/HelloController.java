@@ -11,6 +11,16 @@ public class HelloController {
         return "hello";
     }
 
+    @GetMapping("admin/hello")
+    public String admin() {
+        return "admin";
+    }
+
+    @GetMapping("user/hello")
+    public String user() {
+        return "user";
+    }
+
     @RequestMapping("/byebye")
     public String byebye() {
         return "byebye";
