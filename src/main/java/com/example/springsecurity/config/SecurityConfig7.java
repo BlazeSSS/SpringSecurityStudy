@@ -11,9 +11,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 
-//@Configuration
-public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
+import javax.sql.DataSource;
+
+@Configuration
+public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    DataSource dataSource;
 
     @Autowired
     UserService userService;
@@ -30,6 +36,13 @@ public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
         return hierarchy;
     }
 
+    @Bean
+    JdbcTokenRepositoryImpl jdbcTokenRepository() {
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(dataSource);
+        return jdbcTokenRepository;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService);
@@ -40,14 +53,22 @@ public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/admin/**").hasRole("admin")
                 .antMatchers("/user/**").hasRole("user")
+                .antMatchers("/rememberme").rememberMe()
+                .antMatchers("/fullyAuth").fullyAuthenticated()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
                 .defaultSuccessUrl("/index")
                 .and()
+                .logout()
+                .logoutSuccessUrl("/byebye")
+                .permitAll()
+                .and()
                 .rememberMe()
                 // 若不指定 key，则 key 为每次启动应用时获取的 UUID，会使之前派发出去的令牌失效
                 .key("avalon")
+                // 将用户 token 持久化至数据库中
+                .tokenRepository(jdbcTokenRepository())
                 .and()
                 .csrf().disable();
     }

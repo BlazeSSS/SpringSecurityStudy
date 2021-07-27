@@ -21,13 +21,23 @@ public class HelloController {
         return "user";
     }
 
-    @RequestMapping("/byebye")
+    @GetMapping("/byebye")
     public String byebye() {
         return "byebye";
     }
 
-    @RequestMapping("/index")
+    @GetMapping("/index")
     public String index() {
         return "主页";
+    }
+
+    @GetMapping("fullyAuth")
+    public String fullyAuth() {
+        return "fullyAuth";
+    }
+
+    @GetMapping("/rememberme")
+    public String rememberme() {
+        return "remember-me";
     }
 }
