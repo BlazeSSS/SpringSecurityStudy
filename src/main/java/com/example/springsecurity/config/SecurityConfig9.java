@@ -1,5 +1,6 @@
 package com.example.springsecurity.config;
 
+import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetailsSource;
 import com.example.springsecurity.config.authentication.provider.MyAuthenticationProvider;
 import com.example.springsecurity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,8 +18,8 @@ import org.springframework.security.web.authentication.rememberme.JdbcTokenRepos
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 
-//@Configuration
-public class SecurityConfig8 extends WebSecurityConfigurerAdapter {
+@Configuration
+public class SecurityConfig9 extends WebSecurityConfigurerAdapter {
 
     @Autowired
     DataSource dataSource;
@@ -26,10 +27,14 @@ public class SecurityConfig8 extends WebSecurityConfigurerAdapter {
     @Autowired
     UserService userService;
 
+    @Autowired
+    MyWebAuthenticationDetailsSource authenticationDetailsSource;
+
     /**
      * 密码加密方式
      * @return
      */
+//    @Bean
     PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
@@ -89,6 +94,7 @@ public class SecurityConfig8 extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
+                .authenticationDetailsSource(authenticationDetailsSource)
                 .defaultSuccessUrl("/index")
                 .successHandler((req, res, authentication) -> {
                     res.setContentType("application/json; charset=utf8");
