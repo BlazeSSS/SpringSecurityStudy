@@ -11,6 +11,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Setter
 @Getter
@@ -57,5 +58,18 @@ public class User implements UserDetails {
             authorities.add(new SimpleGrantedAuthority(role.getName()));
         }
         return authorities;
+    }
+
+    @Override
+    public boolean equals(Object user) {
+        if (user instanceof User) {
+            return Objects.equals(username, ((User) user).username);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
     }
 }
