@@ -1,18 +1,16 @@
 package com.example.springsecurity.controller;
 
-import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetails;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 public class HelloController {
     @GetMapping("/hello")
     public String hello(Authentication authentication) throws Exception {
-        MyWebAuthenticationDetails details = (MyWebAuthenticationDetails) authentication.getDetails();
+//        MyWebAuthenticationDetails details = (MyWebAuthenticationDetails) authentication.getDetails();
+        WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
         return new ObjectMapper().writeValueAsString(details);
     }
 

@@ -1,6 +1,5 @@
 package com.example.springsecurity.config;
 
-import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetailsSource;
 import com.example.springsecurity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,21 +16,17 @@ import org.springframework.security.web.authentication.rememberme.JdbcTokenRepos
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 
-//@Configuration
-public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
+@Configuration
+public class SecurityConfig12 extends WebSecurityConfigurerAdapter {
 
     @Autowired
     DataSource dataSource;
 
     @Autowired
     UserService userService;
-
-    @Autowired
-    MyWebAuthenticationDetailsSource authenticationDetailsSource;
 
     /**
      * 密码加密方式
@@ -101,7 +96,6 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .authenticationDetailsSource(authenticationDetailsSource)
                 .successHandler((req, res, authentication) -> {
                     res.setContentType("application/json; charset=utf8");
                     PrintWriter out = res.getWriter();
@@ -125,18 +119,16 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()
                 .sessionManagement()
-                .maximumSessions(1)
-                // 默认为 false，即后登录的踢掉先登录的，设为 true 时，则为不允许新的登录
-//                .maxSessionsPreventsLogin(true)
-                .expiredSessionStrategy(event -> {
-                    HttpServletResponse response = event.getResponse();
-                    response.setContentType("application/json; charset=utf8");
-                    response.setStatus(401);
-                    PrintWriter out = response.getWriter();
-                    out.write("您的账号在另一台设备登录，本次登录已下线");
-                    out.flush();
-                    out.close();
-                });
+                // 防御会话固定攻击
+                .sessionFixation()
+                // 不开启防御
+//                .none()
+                // session 不变，但是会修改 sessionid，实际上用到了 Servlet 容器提供的防御会话固定攻击
+                .changeSessionId();
+                // 登录后创建一个新的 session
+//                .newSession();
+                // 在登录成功之后，创建一个新的会话，然后讲旧的 session 中的信息复制到新的 session 中
+//                .migrateSession();
     }
 
 }
