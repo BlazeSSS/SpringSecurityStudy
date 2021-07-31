@@ -4,9 +4,9 @@ import com.example.springsecurity.config.authentication.details.MyWebAuthenticat
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 public class HelloController {
@@ -14,6 +14,11 @@ public class HelloController {
     public String hello(Authentication authentication) throws Exception {
         MyWebAuthenticationDetails details = (MyWebAuthenticationDetails) authentication.getDetails();
         return new ObjectMapper().writeValueAsString(details);
+    }
+
+    @RequestMapping("/hello/{id}")
+    public String helloId(@PathVariable Integer id, @MatrixVariable String name) {
+        return "id = " + id + "; name = " + name;
     }
 
     @GetMapping("admin/hello")
@@ -31,7 +36,7 @@ public class HelloController {
         return "byebye";
     }
 
-    @GetMapping("/index")
+    @GetMapping({"/", "/index"})
     public String index() {
         return "主页";
     }
