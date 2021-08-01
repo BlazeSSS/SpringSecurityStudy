@@ -5,13 +5,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 @RestController
 public class HelloController {
     @GetMapping("/hello")
-    public String hello(Authentication authentication) throws Exception {
+    public String hello(HttpServletRequest request, HttpSession session, Authentication authentication) throws Exception {
 //        MyWebAuthenticationDetails details = (MyWebAuthenticationDetails) authentication.getDetails();
         WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
-        return new ObjectMapper().writeValueAsString(details);
+        return new ObjectMapper().writeValueAsString(details)
+                + "<br>RequestedSessionId: " + request.getRequestedSessionId();
     }
 
     @RequestMapping("/hello/{id}")

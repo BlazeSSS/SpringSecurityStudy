@@ -1,6 +1,5 @@
-package com.example.springsecurity.config;
+package com.example.springsecurity.config.bak;
 
-import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetailsSource;
 import com.example.springsecurity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +10,18 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.firewall.HttpFirewall;
-import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 
 //@Configuration
-public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
+public class SecurityConfig13 extends WebSecurityConfigurerAdapter {
 
     @Autowired
     DataSource dataSource;
@@ -31,7 +30,11 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
     UserService userService;
 
     @Autowired
-    MyWebAuthenticationDetailsSource authenticationDetailsSource;
+    FindByIndexNameSessionRepository sessionRepository;
+
+    SessionRegistry sessionRegistry() {
+        return new SpringSessionBackedSessionRegistry(sessionRepository);
+    }
 
     /**
      * 密码加密方式
@@ -64,27 +67,6 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
         return jdbcTokenRepository;
     }
 
-    @Bean
-    HttpFirewall httpFirewall() {
-        // 对请求的 URI 的限制，即
-        // localhost:8080/sss/hello?name=avalon 中的 /sss/hello 部分
-        StrictHttpFirewall firewall = new StrictHttpFirewall();
-        // 允许所有请求方式
-        firewall.setUnsafeAllowAnyHttpMethod(true);
-        // 允许分号 ';'
-        firewall.setAllowSemicolon(true);
-        // 允许双斜杠 '//'
-        firewall.setAllowUrlEncodedDoubleSlash(true);
-        // 允许百分号 '%'
-        firewall.setAllowUrlEncodedPercent(true);
-        // 允许正反斜杠 '/' , '\'
-        firewall.setAllowBackSlash(true);
-        firewall.setAllowUrlEncodedSlash(true);
-        // 允许点 '.'
-        firewall.setAllowUrlEncodedPeriod(true);
-        return firewall;
-    }
-
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService);
@@ -101,7 +83,6 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .authenticationDetailsSource(authenticationDetailsSource)
                 .successHandler((req, res, authentication) -> {
                     res.setContentType("application/json; charset=utf8");
                     PrintWriter out = res.getWriter();
@@ -126,17 +107,8 @@ public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .sessionManagement()
                 .maximumSessions(1)
-                // 默认为 false，即后登录的踢掉先登录的，设为 true 时，则为不允许新的登录
-//                .maxSessionsPreventsLogin(true)
-                .expiredSessionStrategy(event -> {
-                    HttpServletResponse response = event.getResponse();
-                    response.setContentType("application/json; charset=utf8");
-                    response.setStatus(401);
-                    PrintWriter out = response.getWriter();
-                    out.write("您的账号在另一台设备登录，本次登录已下线");
-                    out.flush();
-                    out.close();
-                });
+                // 使 SessionAuthenticationStrategy 也使用 redis 管理 session
+                // 受影响的功能有：固定会话防御、同时登录设备数量
+                .sessionRegistry(sessionRegistry());
     }
-
 }

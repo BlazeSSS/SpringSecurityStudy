@@ -1,26 +1,43 @@
-package com.example.springsecurity.config;
+package com.example.springsecurity.config.bak;
 
-import com.example.springsecurity.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+
+import javax.sql.DataSource;
 
 //@Configuration
-public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
+public class SecurityConfig4 extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    UserService userService;
+    DataSource dataSource;
 
     @Bean
     PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
+    }
+
+    @Override
+    @Bean
+    protected UserDetailsService userDetailsService() {
+        JdbcUserDetailsManager manager = new JdbcUserDetailsManager();
+        manager.setDataSource(dataSource);
+        if (!manager.userExists("admin")) {
+            manager.createUser(User.withUsername("admin").password("123").roles("admin").build());
+        }
+        if (!manager.userExists("avalon")) {
+            manager.createUser(User.withUsername("avalon").password("123").roles("user").build());
+        }
+        return manager;
     }
 
     @Bean
@@ -28,11 +45,6 @@ public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
         hierarchy.setHierarchy("ROLE_admin > ROLE_user");
         return hierarchy;
-    }
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService);
     }
 
     @Override
@@ -45,10 +57,8 @@ public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
                 .formLogin()
                 .defaultSuccessUrl("/index")
                 .and()
-                .rememberMe()
-                // 若不指定 key，则 key 为每次启动应用时获取的 UUID，会使之前派发出去的令牌失效
-                .key("avalon")
-                .and()
-                .csrf().disable();
+                .logout()
+                .logoutSuccessUrl("/byebye")
+                .permitAll();
     }
 }

@@ -11,3 +11,6 @@ spring:
       hibernate.dialect: org.hibernate.dialect.MySQL57Dialect
 #    database: mysql
 #    database-platform: mysql
+  redis:
+    host: 127.0.0.1
+    port: 6379

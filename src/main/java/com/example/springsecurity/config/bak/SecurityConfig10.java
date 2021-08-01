@@ -1,7 +1,6 @@
-package com.example.springsecurity.config;
+package com.example.springsecurity.config.bak;
 
 import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetailsSource;
-import com.example.springsecurity.config.authentication.provider.MyAuthenticationProvider;
 import com.example.springsecurity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,17 +8,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 
 //@Configuration
-public class SecurityConfig9 extends WebSecurityConfigurerAdapter {
+public class SecurityConfig10 extends WebSecurityConfigurerAdapter {
 
     @Autowired
     DataSource dataSource;
@@ -34,7 +35,7 @@ public class SecurityConfig9 extends WebSecurityConfigurerAdapter {
      * 密码加密方式
      * @return
      */
-//    @Bean
+    @Bean
     PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
@@ -61,20 +62,20 @@ public class SecurityConfig9 extends WebSecurityConfigurerAdapter {
         return jdbcTokenRepository;
     }
 
-//    @Override
-//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.userDetailsService(userService);
-//    }
-
-    @Bean
-    MyAuthenticationProvider myAuthenticationProvider() {
-        MyAuthenticationProvider provider = new MyAuthenticationProvider();
-        // 必须
-        provider.setPasswordEncoder(passwordEncoder());
-        // 必须
-        provider.setUserDetailsService(userService);
-        return provider;
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService);
     }
+
+//    @Bean
+//    MyAuthenticationProvider myAuthenticationProvider() {
+//        MyAuthenticationProvider provider = new MyAuthenticationProvider();
+//        // 必须
+//        provider.setPasswordEncoder(passwordEncoder());
+//        // 必须
+//        provider.setUserDetailsService(userService);
+//        return provider;
+//    }
 
 //    @Override
 //    protected AuthenticationManager authenticationManager() throws Exception {
@@ -117,7 +118,20 @@ public class SecurityConfig9 extends WebSecurityConfigurerAdapter {
                 // 将用户 token 持久化至数据库中
                 .tokenRepository(jdbcTokenRepository())
                 .and()
-                .csrf().disable();
+                .csrf().disable()
+                .sessionManagement()
+                .maximumSessions(1)
+                // 默认为 false，即后登录的踢掉先登录的，设为 true 时，则为不允许新的登录
+//                .maxSessionsPreventsLogin(true)
+                .expiredSessionStrategy(event -> {
+                    HttpServletResponse response = event.getResponse();
+                    response.setContentType("application/json; charset=utf8");
+                    response.setStatus(401);
+                    PrintWriter out = response.getWriter();
+                    out.write("您的账号在另一台设备登录，本次登录已下线");
+                    out.flush();
+                    out.close();
+                });
     }
 
 }

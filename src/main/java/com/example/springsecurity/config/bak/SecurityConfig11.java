@@ -1,4 +1,4 @@
-package com.example.springsecurity.config;
+package com.example.springsecurity.config.bak;
 
 import com.example.springsecurity.config.authentication.details.MyWebAuthenticationDetailsSource;
 import com.example.springsecurity.service.UserService;
@@ -14,13 +14,15 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 
 //@Configuration
-public class SecurityConfig10 extends WebSecurityConfigurerAdapter {
+public class SecurityConfig11 extends WebSecurityConfigurerAdapter {
 
     @Autowired
     DataSource dataSource;
@@ -62,27 +64,31 @@ public class SecurityConfig10 extends WebSecurityConfigurerAdapter {
         return jdbcTokenRepository;
     }
 
+    @Bean
+    HttpFirewall httpFirewall() {
+        // 对请求的 URI 的限制，即
+        // localhost:8080/sss/hello?name=avalon 中的 /sss/hello 部分
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // 允许所有请求方式
+        firewall.setUnsafeAllowAnyHttpMethod(true);
+        // 允许分号 ';'
+        firewall.setAllowSemicolon(true);
+        // 允许双斜杠 '//'
+        firewall.setAllowUrlEncodedDoubleSlash(true);
+        // 允许百分号 '%'
+        firewall.setAllowUrlEncodedPercent(true);
+        // 允许正反斜杠 '/' , '\'
+        firewall.setAllowBackSlash(true);
+        firewall.setAllowUrlEncodedSlash(true);
+        // 允许点 '.'
+        firewall.setAllowUrlEncodedPeriod(true);
+        return firewall;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService);
     }
-
-//    @Bean
-//    MyAuthenticationProvider myAuthenticationProvider() {
-//        MyAuthenticationProvider provider = new MyAuthenticationProvider();
-//        // 必须
-//        provider.setPasswordEncoder(passwordEncoder());
-//        // 必须
-//        provider.setUserDetailsService(userService);
-//        return provider;
-//    }
-
-//    @Override
-//    protected AuthenticationManager authenticationManager() throws Exception {
-//        // 默认会按 Type 注入 AuthenticationProvider, 可以不用通过新建 ProviderManager 来注入 AuthenticationProvider
-//        ProviderManager manager = new ProviderManager((Arrays.asList(myAuthenticationProvider())));
-//        return manager;
-//    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -96,7 +102,6 @@ public class SecurityConfig10 extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .authenticationDetailsSource(authenticationDetailsSource)
-                .defaultSuccessUrl("/index")
                 .successHandler((req, res, authentication) -> {
                     res.setContentType("application/json; charset=utf8");
                     PrintWriter out = res.getWriter();
