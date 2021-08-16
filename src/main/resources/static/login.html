@@ -17,7 +17,8 @@
         let _csrf = $.cookie('XSRF-TOKEN');
         $.post('/login.html',{username:$("#username").val(),password:$("#password").val(),_csrf:_csrf},function (data) {
             alert("success");
-            console.log(data)
+            location.href = '/';
+            console.log(data);
         })
     })
 </script>
