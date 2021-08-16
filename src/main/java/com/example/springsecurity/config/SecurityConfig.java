@@ -117,8 +117,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // 将用户 token 持久化至数据库中
                 .tokenRepository(jdbcTokenRepository())
                 .and()
+                .requiresChannel()
+                .antMatchers("/https/**").requiresSecure()
+                .antMatchers("/http/**").requiresInsecure()
+                .and()
                 .csrf()
                 // 使用 cookie 保存 XSRF-TOKEN，可用于前后端分离时获取，不配置则使用 session 保存，此时就只能由 model 携带 _csrf 返回前端（前后端不分离）
-                .csrfTokenRepository(new LazyCsrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+//                .csrfTokenRepository(new LazyCsrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
     }
 }
